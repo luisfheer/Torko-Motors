@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MotoShop</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 data-i18n="site_title">MotoShop</h1>
+            <nav>
+                <a href="index.html" data-i18n="nav_catalog">Catálogo</a>
+                <a href="cart.html" data-i18n="nav_cart">Carrito</a>
+                <select id="lang-selector">
+                    <option value="es">ES</option>
+                    <option value="en">EN</option>
+                </select>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="auth-container">
+            <!-- Login Form -->
+            <div class="auth-form" id="login-form">
+                <h2 data-i18n="login_title">Iniciar Sesión</h2>
+                <form id="form-login">
+                    <input type="email" id="login-email" placeholder="Email" required>
+                    <input type="password" id="login-password" placeholder="Contraseña" required>
+                    <button type="submit">Entrar</button>
+                </form>
+                <p>¿No tienes cuenta? <a href="#" id="show-register">Regístrate</a></p>
+            </div>
+
+            <!-- Register Form -->
+            <div class="auth-form" id="register-form" style="display:none;">
+                <h2 data-i18n="register_title">Crear Cuenta</h2>
+                <form id="form-register">
+                    <input type="text" id="register-nombre" placeholder="Nombre completo" required>
+                    <input type="email" id="register-email" placeholder="Email" required>
+                    <input type="password" id="register-password" placeholder="Contraseña" required>
+                    <button type="submit">Registrarse</button>
+                </form>
+                <p>¿Ya tienes cuenta? <a href="#" id="show-login">Inicia sesión</a></p>
+            </div>
+
+            <div id="auth-message" class="message"></div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 MotoShop. <span data-i18n="footer_rights">Todos los derechos reservados.</span></p>
+    </footer>
+
+    <script src="translations.js"></script>
+    <script>
+        const API_URL = 'http://localhost:4000';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initLanguage();
+            
+            // Toggle between login and register
+            document.getElementById('show-register').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('register-form').style.display = 'block';
+                document.getElementById('auth-message').textContent = '';
+            });
+
+            document.getElementById('show-login').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('register-form').style.display = 'none';
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('auth-message').textContent = '';
+            });
+
+            // Handle Login
+            document.getElementById('form-login').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+
+                try {
+                    const response = await fetch(`${API_URL}/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        localStorage.setItem('user', JSON.stringify(data.usuario));
+                        showMessage('Inicio de sesión exitoso', 'success');
+                        setTimeout(() => window.location.href = 'index.html', 1000);
+                    } else {
+                        showMessage(data.error || 'Error al iniciar sesión', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showMessage('Error de conexión con el servidor', 'error');
+                }
+            });
+
+            // Handle Register
+            document.getElementById('form-register').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const nombre = document.getElementById('register-nombre').value;
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+
+                try {
+                    const response = await fetch(`${API_URL}/usuarios`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nombre, email, password })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showMessage('Registro exitoso. Ahora puedes iniciar sesión', 'success');
+                        setTimeout(() => {
+                            document.getElementById('show-login').click();
+                        }, 1500);
+                    } else {
+                        showMessage(data.error || 'Error al registrarse', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showMessage('Error de conexión con el servidor', 'error');
+                }
+            });
+
+            function showMessage(msg, type) {
+                const msgEl = document.getElementById('auth-message');
+                msgEl.textContent = msg;
+                msgEl.className = 'message ' + type;
+            }
+        });
+    </script>
+</body>
+</html>

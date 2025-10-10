@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito - MotoShop</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 data-i18n="site_title">MotoShop</h1>
+            <nav>
+                <a href="index.html" data-i18n="nav_catalog">Catálogo</a>
+                <a href="cart.html" data-i18n="nav_cart">Carrito</a>
+                <span id="user-info"></span>
+                <a href="login.html" id="login-link" data-i18n="nav_login">Login</a>
+                <button id="logout-btn" style="display:none;" data-i18n="nav_logout">Cerrar Sesión</button>
+                <select id="lang-selector">
+                    <option value="es">ES</option>
+                    <option value="en">EN</option>
+                </select>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <h2 data-i18n="cart_title">Mi Carrito</h2>
+        
+        <div id="cart-container">
+            <p data-i18n="loading">Cargando carrito...</p>
+        </div>
+
+        <div id="cart-summary" style="display:none;">
+            <h3 data-i18n="cart_total">Total:</h3>
+            <p id="total-amount">$0.00</p>
+            <button id="clear-cart-btn" data-i18n="cart_clear">Vaciar Carrito</button>
+        </div>
+
+        <div id="cart-message" class="message"></div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 MotoShop. <span data-i18n="footer_rights">Todos los derechos reservados.</span></p>
+    </footer>
+
+    <script src="translations.js"></script>
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initAuth();
+            initLanguage();
+            loadCart();
+
+            // Clear cart button
+            document.getElementById('clear-cart-btn').addEventListener('click', clearCart);
+        });
+
+        async function loadCart() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            
+            if (!user) {
+                document.getElementById('cart-container').innerHTML = 
+                    `<p data-i18n="cart_login_required">${t('cart_login_required')}</p>`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:4000/carrito/${user.id}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayCart(data);
+                } else {
+                    showCartMessage(data.error || t('cart_load_error'), 'error');
+                }
+            } catch (error) {
+                showCartMessage(t('connection_error'), 'error');
+            }
+        }
+
+        function displayCart(data) {
+            const container = document.getElementById('cart-container');
+            
+            if (!data.productos || data.productos.length === 0) {
+                container.innerHTML = `<p data-i18n="cart_empty">${t('cart_empty')}</p>`;
+                document.getElementById('cart-summary').style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = data.productos.map(item => `
+                <div class="cart-item" data-cart-id="${item.carrito_id}">
+                    <div class="cart-item-info">
+                        <h3>${item.nombre}</h3>
+                        <p>${t('price')}: $${item.precio.toFixed(2)}</p>
+                    </div>
+                    <div class="cart-item-controls">
+                        <input type="number" 
+                               value="${item.cantidad}" 
+                               min="1" 
+                               class="cart-quantity" 
+                               data-cart-id="${item.carrito_id}">
+                        <button onclick="updateCartItem(${item.carrito_id})" data-i18n="update">${t('update')}</button>
+                        <button onclick="removeCartItem(${item.carrito_id})" data-i18n="remove">${t('remove')}</button>
+                    </div>
+                    <div class="cart-item-subtotal">
+                        <strong>${t('subtotal')}: $${item.subtotal.toFixed(2)}</strong>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('total-amount').textContent = `$${data.total.toFixed(2)}`;
+            document.getElementById('cart-summary').style.display = 'block';
+        }
+
+        async function updateCartItem(cartId) {
+            const input = document.querySelector(`input[data-cart-id="${cartId}"]`);
+            const cantidad = parseInt(input.value);
+
+            if (cantidad < 1) {
+                showCartMessage(t('invalid_quantity'), 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:4000/carrito/${cartId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cantidad })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showCartMessage(t('cart_updated'), 'success');
+                    loadCart();
+                } else {
+                    showCartMessage(data.error || t('update_error'), 'error');
+                    loadCart();
+                }
+            } catch (error) {
+                showCartMessage(t('connection_error'), 'error');
+            }
+        }
+
+        async function removeCartItem(cartId) {
+            if (!confirm(t('confirm_remove'))) return;
+
+            try {
+                const response = await fetch(`http://localhost:4000/carrito/${cartId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showCartMessage(t('item_removed'), 'success');
+                    loadCart();
+                } else {
+                    showCartMessage(data.error || t('remove_error'), 'error');
+                }
+            } catch (error) {
+                showCartMessage(t('connection_error'), 'error');
+            }
+        }
+
+        async function clearCart() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) return;
+
+            if (!confirm(t('confirm_clear_cart'))) return;
+
+            try {
+                const response = await fetch(`http://localhost:4000/carrito/usuario/${user.id}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showCartMessage(t('cart_cleared'), 'success');
+                    loadCart();
+                } else {
+                    showCartMessage(data.error || t('clear_error'), 'error');
+                }
+            } catch (error) {
+                showCartMessage(t('connection_error'), 'error');
+            }
+        }
+
+        function showCartMessage(msg, type) {
+            const msgEl = document.getElementById('cart-message');
+            msgEl.textContent = msg;
+            msgEl.className = 'message ' + type;
+            setTimeout(() => msgEl.textContent = '', 3000);
+        }
+    </script>
+</body>
+</html>

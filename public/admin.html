@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - MotoShop</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 data-i18n="site_title">MotoShop</h1>
+            <nav>
+                <a href="index.html" data-i18n="nav_catalog">Catálogo</a>
+                <a href="cart.html" data-i18n="nav_cart">Carrito</a>
+                <a href="admin.html" data-i18n="nav_admin">Admin</a>
+                <span id="user-info"></span>
+                <button id="logout-btn" data-i18n="nav_logout">Cerrar Sesión</button>
+                <select id="lang-selector">
+                    <option value="es">ES</option>
+                    <option value="en">EN</option>
+                </select>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <h2 data-i18n="admin_title">Panel de Administración</h2>
+
+        <!-- Tabs -->
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="showTab('products')" data-i18n="admin_tab_products">Gestión de Productos</button>
+            <button class="tab-btn" onclick="showTab('users')" data-i18n="admin_tab_users">Ver Usuarios</button>
+        </div>
+
+        <!-- Products Management Tab -->
+        <div id="products-tab" class="tab-content active">
+            <h3 data-i18n="admin_add_product">Agregar Producto</h3>
+            <form id="add-product-form" class="admin-form">
+                <input type="text" id="prod-nombre" placeholder="Nombre del producto" required data-i18n-placeholder="product_name">
+                <textarea id="prod-descripcion" placeholder="Descripción" rows="3" data-i18n-placeholder="product_description"></textarea>
+                <input type="number" id="prod-precio" placeholder="Precio" step="0.01" required data-i18n-placeholder="product_price">
+                <input type="number" id="prod-stock" placeholder="Stock" required data-i18n-placeholder="product_stock">
+                <select id="prod-categoria" required>
+                    <option value="" data-i18n="select_category">Seleccionar categoría</option>
+                    <option value="motos" data-i18n="category_motos">Motos</option>
+                    <option value="repuestos" data-i18n="category_repuestos">Repuestos</option>
+                    <option value="accesorios" data-i18n="category_accesorios">Accesorios</option>
+                </select>
+                <button type="submit" data-i18n="admin_btn_add">Agregar Producto</button>
+            </form>
+
+            <h3 data-i18n="admin_products_list">Lista de Productos</h3>
+            <div id="admin-products-list"></div>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="users-tab" class="tab-content">
+            <h3 data-i18n="admin_users_list">Lista de Usuarios</h3>
+            <div id="users-list"></div>
+        </div>
+
+        <div id="admin-message" class="message"></div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 MotoShop. <span data-i18n="footer_rights">Todos los derechos reservados.</span></p>
+    </footer>
+
+    <script src="translations.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // No redeclarar API_URL, ya está en app.js
+
+        // Funciones globales para onclick
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Mark button as active
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                if (btn.getAttribute('onclick').includes(tabName)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Load data for users tab
+            if (tabName === 'users') {
+                loadUsers();
+            }
+        }
+
+        async function addProduct(e) {
+            e.preventDefault();
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            const productData = {
+                email: user.email,
+                nombre: document.getElementById('prod-nombre').value,
+                descripcion: document.getElementById('prod-descripcion').value,
+                precio: parseFloat(document.getElementById('prod-precio').value),
+                stock: parseInt(document.getElementById('prod-stock').value),
+                categoria: document.getElementById('prod-categoria').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/productos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(productData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAdminMessage('Producto agregado exitosamente', 'success');
+                    document.getElementById('add-product-form').reset();
+                    loadAdminProducts();
+                } else {
+                    showAdminMessage(data.error || 'Error al agregar producto', 'error');
+                }
+            } catch (error) {
+                showAdminMessage('Error de conexión', 'error');
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            try {
+                const response = await fetch(`${API_URL}/productos/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: user.email })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAdminMessage('Producto eliminado', 'success');
+                    loadAdminProducts();
+                } else {
+                    showAdminMessage(data.error || 'Error al eliminar', 'error');
+                }
+            } catch (error) {
+                showAdminMessage('Error de conexión', 'error');
+            }
+        }
+
+        async function editProduct(id) {
+            const newPrice = prompt('Nuevo precio (deja vacío para no cambiar):');
+            const newStock = prompt('Nuevo stock (deja vacío para no cambiar):');
+
+            if (!newPrice && !newStock) return;
+
+            const user = JSON.parse(localStorage.getItem('user'));
+            const updateData = { email: user.email };
+
+            if (newPrice) updateData.precio = parseFloat(newPrice);
+            if (newStock) updateData.stock = parseInt(newStock);
+
+            try {
+                const response = await fetch(`${API_URL}/productos/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAdminMessage('Producto actualizado', 'success');
+                    loadAdminProducts();
+                } else {
+                    showAdminMessage(data.error || 'Error al actualizar', 'error');
+                }
+            } catch (error) {
+                showAdminMessage('Error de conexión', 'error');
+            }
+        }
+
+        function showAdminMessage(msg, type) {
+            const msgEl = document.getElementById('admin-message');
+            msgEl.textContent = msg;
+            msgEl.className = 'message ' + type;
+            setTimeout(() => msgEl.textContent = '', 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is admin
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user || user.rol !== 'admin') {
+                alert('Acceso denegado. Solo administradores.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            initAuth();
+            initLanguage();
+            
+            // Load initial data
+            loadAdminProducts();
+
+            // Add product form
+            document.getElementById('add-product-form').addEventListener('submit', addProduct);
+        });
+
+        async function loadAdminProducts() {
+            const container = document.getElementById('admin-products-list');
+            container.innerHTML = '<p>Cargando productos...</p>';
+
+            try {
+                const response = await fetch(`${API_URL}/productos`);
+                
+                if (!response.ok) {
+                    throw new Error('Error al cargar productos');
+                }
+
+                const products = await response.json();
+
+                if (products.length === 0) {
+                    container.innerHTML = '<p>No hay productos en el catálogo</p>';
+                    return;
+                }
+
+                container.innerHTML = products.map(p => `
+                    <div class="admin-product-item">
+                        <div class="admin-product-info">
+                            <h4>${p.nombre}</h4>
+                            <p>${p.descripcion || 'Sin descripción'}</p>
+                            <p><strong>Precio:</strong> ${p.precio.toFixed(2)} | <strong>Stock:</strong> ${p.stock} | <strong>Categoría:</strong> ${p.categoria || 'N/A'}</p>
+                        </div>
+                        <div class="admin-product-actions">
+                            <button onclick="editProduct(${p.id})" data-i18n="admin_btn_edit">Editar</button>
+                            <button onclick="deleteProduct(${p.id})" class="btn-danger" data-i18n="admin_btn_delete">Eliminar</button>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Reapply translations after dynamic content
+                applyTranslations();
+            } catch (error) {
+                console.error('Error loading products:', error);
+                container.innerHTML = '<p style="color: red;">Error al cargar productos. Verifica que el servidor esté corriendo.</p>';
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            try {
+                const response = await fetch(`${API_URL}/productos/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: user.email })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAdminMessage('Producto eliminado', 'success');
+                    loadAdminProducts();
+                } else {
+                    showAdminMessage(data.error || 'Error al eliminar', 'error');
+                }
+            } catch (error) {
+                showAdminMessage('Error de conexión', 'error');
+            }
+        }
+
+        async function editProduct(id) {
+            const newPrice = prompt('Nuevo precio (deja vacío para no cambiar):');
+            const newStock = prompt('Nuevo stock (deja vacío para no cambiar):');
+
+            if (!newPrice && !newStock) return;
+
+            const user = JSON.parse(localStorage.getItem('user'));
+            const updateData = { email: user.email };
+
+            if (newPrice) updateData.precio = parseFloat(newPrice);
+            if (newStock) updateData.stock = parseInt(newStock);
+
+            try {
+                const response = await fetch(`${API_URL}/productos/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAdminMessage('Producto actualizado', 'success');
+                    loadAdminProducts();
+                } else {
+                    showAdminMessage(data.error || 'Error al actualizar', 'error');
+                }
+            } catch (error) {
+                showAdminMessage('Error de conexión', 'error');
+            }
+        }
+
+        async function loadUsers() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const container = document.getElementById('users-list');
+            container.innerHTML = '<p>Cargando usuarios...</p>';
+
+            try {
+                const response = await fetch(`${API_URL}/usuarios?email=${encodeURIComponent(user.email)}`);
+                
+                if (!response.ok) {
+                    throw new Error('Error al cargar usuarios');
+                }
+
+                const users = await response.json();
+
+                if (users.error) {
+                    container.innerHTML = `<p style="color: red;">${users.error}</p>`;
+                    return;
+                }
+
+                if (users.length === 0) {
+                    container.innerHTML = '<p>No hay usuarios registrados</p>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${users.map(u => `
+                                <tr>
+                                    <td>${u.id}</td>
+                                    <td>${u.nombre}</td>
+                                    <td>${u.email}</td>
+                                    <td><span class="role-badge ${u.rol}">${u.rol}</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('Error loading users:', error);
+                container.innerHTML = '<p style="color: red;">Error al cargar usuarios. Verifica que el servidor esté corriendo.</p>';
+            }
+        }
+
+        function showAdminMessage(msg, type) {
+            const msgEl = document.getElementById('admin-message');
+            msgEl.textContent = msg;
+            msgEl.className = 'message ' + type;
+            setTimeout(() => msgEl.textContent = '', 3000);
+        }
+    </script>
+</body>
+</html>

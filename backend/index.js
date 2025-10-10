@@ -8,8 +8,14 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ["http://127.0.0.1:5500", "http://localhost:5500"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type"],
+  credentials: true
+}));
 app.use(express.json());
+app.use(express.static("public"));
 
 // Conexión a la base de datos SQLite
 const DB_PATH = path.join(__dirname, "tienda.db");
@@ -69,7 +75,7 @@ app.get("/", (req, res) => {
     res.send("API funcionando correctamente");
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
 
 // USUARIOS
@@ -171,7 +177,7 @@ app.get("/usuarios", (req, res) => {
 
 // Agregar un producto al catálogo (solo admin)
 app.post("/productos", (req, res) => {
-  const { email, nombre, descripcion, precio, stock } = req.body;
+  const { email, nombre, descripcion, precio, stock, categoria } = req.body; // ← Agrega categoria aquí
 
   // Verificar si el usuario que envía la petición es admin
   db.get(`SELECT rol FROM usuarios WHERE email = ?`, [email], (err, row) => {
@@ -185,10 +191,10 @@ app.post("/productos", (req, res) => {
       return res.status(400).json({ error: "Nombre, precio y stock son obligatorios." });
     }
 
-    // Insertar el producto en la base de datos
+    // Insertar el producto en la base de datos (CON CATEGORIA)
     db.run(
-      `INSERT INTO productos (nombre, descripcion, precio, stock) VALUES (?, ?, ?, ?)`,
-      [nombre, descripcion || null, precio, stock],
+      `INSERT INTO productos (nombre, descripcion, precio, stock, categoria) VALUES (?, ?, ?, ?, ?)`,
+      [nombre, descripcion || null, precio, stock, categoria || null], // ← Agrega categoria aquí
       function (err) {
         if (err) {
           return res.status(500).json({ error: "No se pudo registrar el producto" });
