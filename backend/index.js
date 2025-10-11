@@ -177,7 +177,7 @@ app.get("/usuarios", (req, res) => {
 
 // Agregar un producto al catálogo (solo admin)
 app.post("/productos", (req, res) => {
-  const { email, nombre, descripcion, precio, stock, categoria } = req.body; // ← Agrega categoria aquí
+  const { email, nombre, descripcion, precio, stock, categoria, imagen } = req.body; // ← Agrega categoria aquí
 
   // Verificar si el usuario que envía la petición es admin
   db.get(`SELECT rol FROM usuarios WHERE email = ?`, [email], (err, row) => {
@@ -193,8 +193,8 @@ app.post("/productos", (req, res) => {
 
     // Insertar el producto en la base de datos (CON CATEGORIA)
     db.run(
-      `INSERT INTO productos (nombre, descripcion, precio, stock, categoria) VALUES (?, ?, ?, ?, ?)`,
-      [nombre, descripcion || null, precio, stock, categoria || null], // ← Agrega categoria aquí
+      `INSERT INTO productos (nombre, descripcion, precio, stock, categoria, imagen) VALUES (?, ?, ?, ?, ?, ?)`,
+      [nombre, descripcion || null, precio, stock, categoria || null, imagen || 'default.png'], // ← Agrega categoria aquí
       function (err) {
         if (err) {
           return res.status(500).json({ error: "No se pudo registrar el producto" });
@@ -210,7 +210,7 @@ app.post("/productos", (req, res) => {
 
 // Actualizar un producto existente (solo admin)
 app.put("/productos/:id", (req, res) => {
-  const { email, nombre, descripcion, precio, stock } = req.body;
+  const { email, nombre, descripcion, precio, stock, imagen } = req.body;
   const { id } = req.params;
 
   // Verificar si el usuario es admin
@@ -230,11 +230,12 @@ app.put("/productos/:id", (req, res) => {
       const nuevaDescripcion = descripcion || producto.descripcion;
       const nuevoPrecio = precio || producto.precio;
       const nuevoStock = stock !== undefined ? stock : producto.stock;
+      const nuevaImagen = imagen || producto.imagen;
 
       // Ejecutar la actualización
       db.run(
-        `UPDATE productos SET nombre = ?, descripcion = ?, precio = ?, stock = ? WHERE id = ?`,
-        [nuevoNombre, nuevaDescripcion, nuevoPrecio, nuevoStock, id],
+        `UPDATE productos SET nombre = ?, descripcion = ?, precio = ?, stock = ?, imagen = ? WHERE id = ?`,
+        [nuevoNombre, nuevaDescripcion, nuevoPrecio, nuevoStock, nuevaImagen, id],
         function (err) {
           if (err) {
             return res.status(500).json({ error: "Error al actualizar el producto" });

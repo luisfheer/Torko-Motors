@@ -2,7 +2,7 @@
 const translations = {
     es: {
         // Navigation
-        site_title: "MotoShop",
+        site_title: "Torko Motors",
         nav_catalog: "Catálogo",
         nav_cart: "Carrito",
         nav_admin: "Admin",
@@ -75,6 +75,7 @@ const translations = {
         
         // User info
         welcome: "Bienvenido",
+        welcome_guest: "Bienvenido",
         
         // Admin Panel
         admin_title: "Panel de Administración",
@@ -90,11 +91,12 @@ const translations = {
         product_description: "Descripción",
         product_price: "Precio",
         product_stock: "Stock",
+        product_image: "Nombre de la imagen (ej: yamaha-mt07.jpg)",
         select_category: "Seleccionar categoría"
     },
     en: {
         // Navigation
-        site_title: "MotoShop",
+        site_title: "Torko Motors",
         nav_catalog: "Catalog",
         nav_cart: "Cart",
         nav_admin: "Admin",
@@ -167,6 +169,7 @@ const translations = {
         
         // User info
         welcome: "Welcome",
+        welcome_guest: "Welcome",
         
         // Admin Panel
         admin_title: "Admin Panel",
@@ -177,18 +180,24 @@ const translations = {
         admin_users_list: "User List",
         admin_btn_add: "Add Product",
         admin_btn_edit: "Edit",
-        admin_btn_delete: "Delete"
+        admin_btn_delete: "Delete",
+        product_name: "Product name",
+        product_description: "Description",
+        product_price: "Price",
+        product_stock: "Stock",
+        product_image: "Image filename (e.g: yamaha-mt07.jpg)",
+        select_category: "Select category"
     }
 };
 
 let currentLang = 'es';
 
-// Get translation
+// Obtener traduccion
 function t(key) {
     return translations[currentLang][key] || key;
 }
 
-// Apply translations to page
+// Aplicar traducciones al DOM
 function applyTranslations() {
     // Translate text content
     document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -196,14 +205,23 @@ function applyTranslations() {
         el.textContent = t(key);
     });
     
-    // Translate placeholders
+    // Traducir placeholders
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
         const key = el.getAttribute('data-i18n-placeholder');
         el.placeholder = t(key);
     });
+
+    // Traducir contenido dinamico como "Bienvenido, [Nombre]"
+    document.querySelectorAll('[data-i18n-dynamic]').forEach(el => {
+        const key = el.getAttribute('data-i18n-dynamic');
+        const userName = el.getAttribute('data-user-name');
+        if (userName) {
+            el.textContent = `${t(key)}, ${userName}`;
+        }
+    });
 }
 
-// Initialize language selector
+// Inicializar selector de idioma
 function initLanguage() {
     const savedLang = localStorage.getItem('language') || 'es';
     currentLang = savedLang;

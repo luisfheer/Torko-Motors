@@ -15,6 +15,8 @@ function initAuth() {
 
     if (user && userInfo) {
         userInfo.textContent = `${t('welcome')}, ${user.nombre}`;
+        userInfo.setAttribute('data-i18n-dynamic', 'welcome');
+        userInfo.setAttribute('data-user-name', user.nombre);
         if (loginLink) loginLink.style.display = 'none';
         if (logoutBtn) {
             logoutBtn.style.display = 'inline-block';
@@ -25,7 +27,10 @@ function initAuth() {
             adminLink.style.display = 'inline-block';
         }
     } else {
-        if (userInfo) userInfo.textContent = '';
+        if (userInfo) {
+            userInfo.textContent = t('welcome_guest');
+            userInfo.setAttribute('data-i18n', 'welcome_guest');
+        }
         if (loginLink) loginLink.style.display = 'inline-block';
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (adminLink) adminLink.style.display = 'none';
@@ -69,9 +74,13 @@ function displayProducts(products) {
 
     container.innerHTML = products.map(product => `
         <div class="product-card">
+            <img src="img/${product.imagen || 'default.png'}" 
+                 alt="${product.nombre}" 
+                 class="product-img"
+                 onerror="this.src='img/default.png'">
             <h3>${product.nombre}</h3>
             <p>${product.descripcion || ''}</p>
-            <p class="price">$${product.precio.toFixed(2)}</p>
+            <p class="price">${product.precio.toFixed(2)}</p>
             <p class="stock">${t('stock')}: ${product.stock}</p>
             <button 
                 onclick="addToCart(${product.id})" 

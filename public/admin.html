@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - MotoShop</title>
+    <title>Admin - Torko Motors</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
         <div class="container">
-            <h1 data-i18n="site_title">MotoShop</h1>
+            <h1 data-i18n="site_title">Torko Motors</h1>
             <nav>
                 <a href="index.html" data-i18n="nav_catalog">Catálogo</a>
                 <a href="cart.html" data-i18n="nav_cart">Carrito</a>
@@ -47,6 +47,8 @@
                     <option value="repuestos" data-i18n="category_repuestos">Repuestos</option>
                     <option value="accesorios" data-i18n="category_accesorios">Accesorios</option>
                 </select>
+                <input type="text" id="prod-imagen" placeholder="Nombre de la imagen (ej: yamaha-mt07.jpg)" data-i18n-placeholder="product_image">
+                <small style="color: #666;">Si no agregas una imagen, se usará default.png</small>
                 <button type="submit" data-i18n="admin_btn_add">Agregar Producto</button>
             </form>
 
@@ -64,7 +66,7 @@
     </main>
 
     <footer>
-        <p>&copy; 2025 MotoShop. <span data-i18n="footer_rights">Todos los derechos reservados.</span></p>
+        <p>&copy; 2025 Torko Motors. <span data-i18n="footer_rights">Todos los derechos reservados.</span></p>
     </footer>
 
     <script src="translations.js"></script>
@@ -103,13 +105,16 @@
             e.preventDefault();
             const user = JSON.parse(localStorage.getItem('user'));
 
+            const imagen = document.getElementById('prod-imagen').value.trim();
+
             const productData = {
                 email: user.email,
                 nombre: document.getElementById('prod-nombre').value,
                 descripcion: document.getElementById('prod-descripcion').value,
                 precio: parseFloat(document.getElementById('prod-precio').value),
                 stock: parseInt(document.getElementById('prod-stock').value),
-                categoria: document.getElementById('prod-categoria').value
+                categoria: document.getElementById('prod-categoria').value,
+                imagen: imagen || 'default.png'
             };
 
             try {
@@ -256,63 +261,6 @@
             }
         }
 
-        async function deleteProduct(id) {
-            if (!confirm('¿Estás seguro de eliminar este producto?')) return;
-
-            const user = JSON.parse(localStorage.getItem('user'));
-
-            try {
-                const response = await fetch(`${API_URL}/productos/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: user.email })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showAdminMessage('Producto eliminado', 'success');
-                    loadAdminProducts();
-                } else {
-                    showAdminMessage(data.error || 'Error al eliminar', 'error');
-                }
-            } catch (error) {
-                showAdminMessage('Error de conexión', 'error');
-            }
-        }
-
-        async function editProduct(id) {
-            const newPrice = prompt('Nuevo precio (deja vacío para no cambiar):');
-            const newStock = prompt('Nuevo stock (deja vacío para no cambiar):');
-
-            if (!newPrice && !newStock) return;
-
-            const user = JSON.parse(localStorage.getItem('user'));
-            const updateData = { email: user.email };
-
-            if (newPrice) updateData.precio = parseFloat(newPrice);
-            if (newStock) updateData.stock = parseInt(newStock);
-
-            try {
-                const response = await fetch(`${API_URL}/productos/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updateData)
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showAdminMessage('Producto actualizado', 'success');
-                    loadAdminProducts();
-                } else {
-                    showAdminMessage(data.error || 'Error al actualizar', 'error');
-                }
-            } catch (error) {
-                showAdminMessage('Error de conexión', 'error');
-            }
-        }
-
         async function loadUsers() {
             const user = JSON.parse(localStorage.getItem('user'));
             const container = document.getElementById('users-list');
@@ -363,13 +311,6 @@
                 console.error('Error loading users:', error);
                 container.innerHTML = '<p style="color: red;">Error al cargar usuarios. Verifica que el servidor esté corriendo.</p>';
             }
-        }
-
-        function showAdminMessage(msg, type) {
-            const msgEl = document.getElementById('admin-message');
-            msgEl.textContent = msg;
-            msgEl.className = 'message ' + type;
-            setTimeout(() => msgEl.textContent = '', 3000);
         }
     </script>
 </body>
