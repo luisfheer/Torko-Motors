@@ -5,7 +5,7 @@ const API_URL = 'http://localhost:4000';
 let allProducts = [];
 let filteredProducts = [];
 
-// Initialize authentication state
+// Inicialización del estado de autenticación
 function initAuth() {
     const user = JSON.parse(localStorage.getItem('user'));
     const userInfo = document.getElementById('user-info');
@@ -22,7 +22,7 @@ function initAuth() {
             logoutBtn.style.display = 'inline-block';
             logoutBtn.addEventListener('click', logout);
         }
-        // Show admin link only for admin users
+        // Mostrar enlace admin si el usuario es admin
         if (adminLink && user.rol === 'admin') {
             adminLink.style.display = 'inline-block';
         }
@@ -37,13 +37,13 @@ function initAuth() {
     }
 }
 
-// Logout function
+// Función de logout
 function logout() {
     localStorage.removeItem('user');
     window.location.href = 'index.html';
 }
 
-// Load all products
+// Cargar todos los productos
 async function loadProducts() {
     try {
         const response = await fetch(`${API_URL}/productos`);
@@ -63,7 +63,7 @@ async function loadProducts() {
     }
 }
 
-// Display products
+// Mostrar productos
 function displayProducts(products) {
     const container = document.getElementById('products-container');
 
@@ -92,7 +92,7 @@ function displayProducts(products) {
     `).join('');
 }
 
-// Add product to cart
+// Agregar producto al carrito
 async function addToCart(productId) {
     const user = JSON.parse(localStorage.getItem('user'));
 
@@ -126,7 +126,7 @@ async function addToCart(productId) {
     }
 }
 
-// Setup filters
+// Configuración de filtros
 function setupFilters() {
     const searchInput = document.getElementById('search-input');
     const categoryFilter = document.getElementById('category-filter');
@@ -150,7 +150,7 @@ function setupFilters() {
     }
 }
 
-// Filter products
+// Filtrar productos
 function filterProducts() {
     const searchTerm = document.getElementById('search-input').value.toLowerCase();
     const categorySelect = document.getElementById('category-filter');
@@ -178,7 +178,7 @@ function filterProducts() {
     displayProducts(filteredProducts);
 }
 
-// Clear filters
+// Borrar filtros
 function clearFilters() {
     document.getElementById('search-input').value = '';
     document.getElementById('category-filter').value = '';

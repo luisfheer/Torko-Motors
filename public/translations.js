@@ -1,7 +1,8 @@
-// Translation system
+// Script para manejar traducciones en la aplicación
+// Soporta español (es) e inglés (en)
 const translations = {
     es: {
-        // Navigation
+        // Navegación
         site_title: "Torko Motors",
         nav_catalog: "Catálogo",
         nav_cart: "Carrito",
@@ -9,7 +10,7 @@ const translations = {
         nav_login: "Iniciar Sesión",
         nav_logout: "Cerrar Sesión",
         
-        // Search & Filters
+        // Búsqueda y Filtros
         search_placeholder: "Buscar productos...",
         filter_category: "Categoría:",
         category_all: "Todas",
@@ -22,7 +23,7 @@ const translations = {
         filter_apply: "Aplicar",
         filter_clear: "Limpiar",
         
-        // Products
+        // Productos
         loading: "Cargando productos...",
         no_products: "No se encontraron productos",
         price: "Precio",
@@ -30,7 +31,7 @@ const translations = {
         add_to_cart: "Agregar al Carrito",
         out_of_stock: "Agotado",
         
-        // Auth
+        // Autenticación
         login_title: "Iniciar Sesión",
         register_title: "Crear Cuenta",
         email_placeholder: "Email",
@@ -48,7 +49,7 @@ const translations = {
         register_error: "Error al registrarse",
         connection_error: "Error de conexión con el servidor",
         
-        // Cart
+        // Carrito
         cart_title: "Mi Carrito",
         cart_empty: "Tu carrito está vacío",
         cart_login_required: "Debes iniciar sesión para ver tu carrito",
@@ -73,11 +74,11 @@ const translations = {
         // Footer
         footer_rights: "Todos los derechos reservados.",
         
-        // User info
+        // Información del usuario
         welcome: "Bienvenido",
         welcome_guest: "Bienvenido",
         
-        // Admin Panel
+        // Panel de Administración
         admin_title: "Panel de Administración",
         admin_tab_products: "Gestión de Productos",
         admin_tab_users: "Ver Usuarios",
@@ -124,7 +125,7 @@ const translations = {
         add_to_cart: "Add to Cart",
         out_of_stock: "Out of Stock",
         
-        // Auth
+        // Authentication
         login_title: "Login",
         register_title: "Create Account",
         email_placeholder: "Email",

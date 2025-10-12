@@ -23,7 +23,7 @@
 
     <main class="container">
         <div class="auth-container">
-            <!-- Login Form -->
+            // Formulario de Login
             <div class="auth-form" id="login-form">
                 <h2 data-i18n="login_title">Iniciar Sesión</h2>
                 <form id="form-login">
@@ -34,7 +34,7 @@
                 <p>¿No tienes cuenta? <a href="#" id="show-register">Regístrate</a></p>
             </div>
 
-            <!-- Register Form -->
+            // Formulario de Registro
             <div class="auth-form" id="register-form" style="display:none;">
                 <h2 data-i18n="register_title">Crear Cuenta</h2>
                 <form id="form-register">
@@ -61,7 +61,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             initLanguage();
             
-            // Toggle between login and register
+            // Alternar entre formularios
             document.getElementById('show-register').addEventListener('click', (e) => {
                 e.preventDefault();
                 document.getElementById('login-form').style.display = 'none';
@@ -76,7 +76,7 @@
                 document.getElementById('auth-message').textContent = '';
             });
 
-            // Handle Login
+            // Manejo Login
             document.getElementById('form-login').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const email = document.getElementById('login-email').value;
@@ -104,7 +104,7 @@
                 }
             });
 
-            // Handle Register
+            // Manejo Registro
             document.getElementById('form-register').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const nombre = document.getElementById('register-nombre').value;

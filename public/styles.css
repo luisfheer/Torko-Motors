@@ -179,7 +179,7 @@ header nav button:hover {
     border-radius: 20px;
 }
 
-/* Filters */
+/* Filtros */
 .filters {
     background: #0a0a0a;
     padding: 1.5rem;
@@ -260,7 +260,7 @@ header nav button:hover {
     background: #DC2626;
 }
 
-/* Products Grid */
+/* Grid de productos */
 .products-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -341,7 +341,7 @@ header nav button:hover {
     border: 2px solid #DC2626;
 }
 
-/* Auth Forms */
+/* Formularios de autenticación */
 .auth-container {
     max-width: 400px;
     margin: 3rem auto;
@@ -412,7 +412,7 @@ header nav button:hover {
     text-decoration: underline;
 }
 
-/* Cart */
+/* Carrito */
 .cart-item {
     background: #0a0a0a;
     padding: 1.5rem;
@@ -517,7 +517,7 @@ header nav button:hover {
     transform: scale(1.05);
 }
 
-/* Messages */
+/* Mensajes */
 .message {
     padding: 1rem;
     margin: 1rem 0;
@@ -548,7 +548,7 @@ footer {
     border-top: 3px solid #DC2626;
 }
 
-/* Admin Panel */
+/* Panel admin */
 .admin-tabs {
     display: flex;
     gap: 1rem;
